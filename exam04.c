@@ -31,12 +31,10 @@ Don't forget to pass the environment variable to execve
 
 Hints:
 Do not leak file descriptors!
-
-8 void functions */
+*/
 
 #include <sys/wait.h>
 #include <string.h>
-#include <errno.h>
 #include <stdlib.h>
 #include <unistd.h>
 
@@ -60,26 +58,25 @@ void	ft_cd(int ac, char **av)
 {
 	if (ac != 2)
 		ft_fd("error: cd: bad arguments", NULL);
-	else if (chdir(av[1]) != 0)
-		ft_fd("error: cd: cannot change directory to ", av[1]);
+	else if (chdir(av[1]) != 0) //av[0] for examshell
+		ft_fd("error: cd: cannot change directory to ", av[1]); //av[0] for examshell
 } //4
 
-void	ft_wait(void)
+void	ft_wait(int pid)
 {
-	while(1) //wait forever
+	while(1)
 	{
-		pid_t wp = waitpid(-1, NULL, WUNTRACED); //biggest to smallest
+		pid_t wp = waitpid(-1, NULL, WUNTRACED);
 		if (wp == -1)
 		{
-			if (errno == ECHILD) break;
-			ft_sys(-1); //-1 like condition
+			if (pid != 0) break;
+			ft_sys(-1);
 		}
 	}
 } //9
 
 void	ft_ex(char **av, int i, int tmp, char **env)
 {
-	//MR.CEFE 0
 	av[i] = NULL;
 	ft_sys(dup2(tmp, STDIN_FILENO));
 	close(tmp);
@@ -90,7 +87,6 @@ void	ft_ex(char **av, int i, int tmp, char **env)
 
 void	ft_c(char **av, int i, int *tmp, char **env)
 {
-	//FEWER - FECWR - fork - execute - close - wait - redirect
 	pid_t pid = fork();
 	ft_sys(pid);
 	if (pid == 0)
@@ -98,7 +94,7 @@ void	ft_c(char **av, int i, int *tmp, char **env)
 	else
 	{
 		close(*tmp);
-		ft_wait();
+		ft_wait(pid);
 		*tmp = dup(STDIN_FILENO);
 		ft_sys(*tmp);
 	}
@@ -106,20 +102,19 @@ void	ft_c(char **av, int i, int *tmp, char **env)
 
 void	ft_p(char **av, int i, int *tmp, char **env)
 {
-	//FPFS
 	int fd[2];
 	ft_sys(pipe(fd));
 
 	pid_t pid = fork();
 	ft_sys(pid);
-	if (pid == 0) //child process fcce 101
+	if (pid == 0) //child process
 	{
 		ft_sys(dup2(fd[1], STDOUT_FILENO));
 		close(fd[0]);
 		close(fd[1]);
 		ft_ex(av, i, *tmp, env);
 	}
-	else //parent process ccr 10
+	else //parent process
 	{
 		close(fd[1]);
 		close(*tmp);
@@ -137,9 +132,9 @@ int main(int ac, char **av, char **env)
 	av++;
 	while(*av)
 	{
-		i = 0; //reset i
+		i = 0;
 		while(av[i] && strcmp(av[i], ";") && strcmp(av[i], "|")) i++;
-		if (strcmp(av[0], "cd") == 0) // if cd
+		if (strcmp(av[0], "cd") == 0)
 			ft_cd(i, av);
 		else if (i > 0)
 		{
