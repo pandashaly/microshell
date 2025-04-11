@@ -58,8 +58,8 @@ void	ft_cd(int ac, char **av)
 {
 	if (ac != 2)
 		ft_fd("error: cd: bad arguments", NULL);
-	else if (chdir(av[1]) != 0) //av[0] for examshell
-		ft_fd("error: cd: cannot change directory to ", av[1]); //av[0] for examshell
+	else if (chdir(av[1]) != 0) //av[0] for real examshell
+		ft_fd("error: cd: cannot change directory to ", av[1]); //av[0] for real examshell
 } //4
 
 void	ft_wait(int pid)
@@ -69,7 +69,7 @@ void	ft_wait(int pid)
 		pid_t wp = waitpid(-1, NULL, WUNTRACED);
 		if (wp == -1)
 		{
-			if (pid != 0) break;
+			if (pid != 0) break; //same as errno = ECHILD (man errno)
 			ft_sys(-1);
 		}
 	}
@@ -132,7 +132,7 @@ int main(int ac, char **av, char **env)
 	av++;
 	while(*av)
 	{
-		i = 0;
+		i = 0; //remember to reset i
 		while(av[i] && strcmp(av[i], ";") && strcmp(av[i], "|")) i++;
 		if (strcmp(av[0], "cd") == 0)
 			ft_cd(i, av);
